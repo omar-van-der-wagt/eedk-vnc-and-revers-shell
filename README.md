@@ -1,7 +1,7 @@
 # EEDK VNC and Revers Shell 
 
 
-Based on the work from Steen Pedersen
+Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template
 # EEDK_PowerShell_template
 Example of a PowerShell template script which can be deployed and provide feedback to ePO using Custom Props.
 

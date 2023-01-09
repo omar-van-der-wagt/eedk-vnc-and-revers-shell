@@ -52,7 +52,19 @@
 # Return the status in CustomProps  
 # Steen Pedersen, 2022 - Version 005.1
 # ------------------------------------------------------------------------------------------------
-
+param (
+    [Parameter(Mandatory=$true,HelpMessage="Time in minutes")]
+    [int]$Time = $(throw "Time is mandatory, please provide a value."),
+    [Parameter(Mandatory=$true)]
+    [Alias("host","admin","ip")]
+    [string]$AdminHost = $(throw "AdminHost is mandatory, please provide a value."),    
+    [switch]$VNC = $false,
+    [switch]$Console = $false,
+    [Alias("port")]
+    [int]$ConsolePort = 1616,  
+    [Parameter(HelpMessage="When not provided ePO will not be updated")]
+    [int]$prop = -1
+)
 # ------------------------------------------------------------------------------------------------
 #
 # Preapare some environmental variables
@@ -180,7 +192,7 @@ function place_your_code_here_function {
     Start-Process -FilePath tvnserver.exe -ArgumentList "-install -silent"
     Start-Process -FilePath tvnserver.exe -ArgumentList "-start -silent"
     Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -sharefull"
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -connect 10.44.20.20"
+    Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -connect $AdminHost"
     Wait-Process -Name tvnserver -ErrorAction Continue -Verbose -Timeout 50
     Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -shutdown"
     Start-Process -FilePath tvnserver.exe -ArgumentList "-stop -silent"
@@ -201,6 +213,19 @@ function main()
     # Write start time 
     Add-Content  $g_temp_status_file ($g_ISO_Date_with_time+'  Start :'+$PSCommandPath+$args)
     
+    Write-Host AdminHost 
+    Write-Host $AdminHost  
+    Write-Host VNC
+    Write-Host $VNC
+    Write-Host Console
+    Write-Host $Console
+    Write-Host ConsolePort
+    Write-Host $ConsolePort
+    Write-Host prop
+    Write-Host $prop
+    Write-Host Time
+    Write-Host $Time
+
     get_path_to_agent_tools
 
     place_your_code_here_function
@@ -209,7 +234,7 @@ function main()
 
     #"Completed : "
     #Get-Date -format "yyyyMMdd_HHmmss"
-    
+
 }
 
 main
