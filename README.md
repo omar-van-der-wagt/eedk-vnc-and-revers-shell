@@ -12,9 +12,8 @@ At the end it will provide the command that you need to give in ePO:
 
 ----
 
-**Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template **
-
 # EEDK_PowerShell_template
+**Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template **
 Example of a PowerShell template script which can be deployed and provide feedback to ePO using Custom Props.
 
 Make sure to place both the .CMD and .PS1 in an empty folder and use the EEDK to select that folder.
