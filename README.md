@@ -9,8 +9,11 @@ At the end it will provide the command that you need to give in ePO:
 <!-- blank line -->
 <br>
 <!-- blank line -->
+
 ----
-**Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template**
+
+**Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template **
+
 # EEDK_PowerShell_template
 Example of a PowerShell template script which can be deployed and provide feedback to ePO using Custom Props.
 
