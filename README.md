@@ -9,7 +9,7 @@ At the end it will provide the command that you need to give in ePO:
 
 
 # EEDK_PowerShell_template
-**Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template **
+Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template
 <!-- blank line -->
 ----
 <!-- blank line -->
