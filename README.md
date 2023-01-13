@@ -7,8 +7,8 @@ Run this before you deploy the package to a agent. This will provide the options
 At the end it will provide the command that you need to give in ePO:
 -time <minutes> -host <address> -VNC -Console -port 1616
 
-
-Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template
+----
+**Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template**
 # EEDK_PowerShell_template
 Example of a PowerShell template script which can be deployed and provide feedback to ePO using Custom Props.
 
