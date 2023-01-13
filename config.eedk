@@ -4,9 +4,9 @@
   <Folder>true</Folder>
   <SourcePackages>.\eedk-vnc-and-revers-shell\package</SourcePackages>
   <BuildFolder>.\eedk-vnc-and-revers-shell</BuildFolder>
-  <ProductName>SAMPLAPP</ProductName>
+  <ProductName>SHELLVNC</ProductName>
   <ProductID>1337</ProductID>
-  <ProductDescription>Sample Application</ProductDescription>
+  <ProductDescription>.EEDK VNC and Reverse shell</ProductDescription>
   <ProductVersion>1.0.0.0</ProductVersion>
   <InstallCommand>EEDK_Batch_start.cmd</InstallCommand>
   <DetectionKey>HKLM\Software\McAfee\EEDK</DetectionKey>
