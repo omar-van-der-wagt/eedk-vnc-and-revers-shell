@@ -8,7 +8,7 @@ At the end it will provide the command that you need to give in ePO:
 -time <minutes> -host <address> -VNC -Console -port 1616
 
 
-# EEDK_PowerShell_template
+## EEDK_PowerShell_template
 Based on the work from Steen Pedersen https://github.com/SteenPedersen/EEDK_PowerShell_template
 <!-- blank line -->
 ----
